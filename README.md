@@ -12,6 +12,12 @@ Make sure you have Python [installed properly](http://install.python-guide.org).
 $ git clone git@github.com:heroku/python-getting-started.git
 $ cd python-getting-started
 
+$ pip install virtualenv
+
+$ virtualenv venv
+
+$ source venv/bin/activate
+
 $ pip install -r requirements.txt
 
 $ createdb python_getting_started
