@@ -4,22 +4,39 @@ import operator
 import re
 import nltk
 from flask import Flask, render_template, request, jsonify
-from flask.ext.sqlalchemy import SQLAlchemy
 from stop_words import stops
 from collections import Counter
 from bs4 import BeautifulSoup
 from rq import Queue
 from rq.job import Job
 from worker import conn
+# flask-peewee bindings
+from flask_peewee.db import Database
+from flask_peewee.auth import Auth
+from flask_peewee.rest import RestAPI
 
+# configure our database
+DATABASE = {
+    'name': 'example.db',
+    'engine': 'peewee.SqliteDatabase',
+}
 app = Flask(__name__)
-app.config.from_object(os.environ['APP_SETTINGS'])
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-db = SQLAlchemy(app)
+# app.config.from_object(os.environ['APP_SETTINGS'])
+app.config.from_object(__name__)
+db = Database(app)
+# create an Auth object for use with our flask app and database wrapper
+auth = Auth(app, db)
 
 q = Queue(connection=conn)
 
 from models import *
+
+# create a RestAPI container
+api = RestAPI(app)
+api.setup()
+api.register(Result)
+api.setup()
+
 
 def count_and_save_words(url):
 
@@ -56,6 +73,8 @@ def count_and_save_words(url):
             result_all=raw_word_count,
             result_no_stop_words=no_stop_words_count
         )
+        query = Result.select().where(url=url)
+        result = query.first()
         db.session.add(result)
         db.session.commit()
         return result.id
@@ -85,7 +104,7 @@ def get_results(job_key):
     job = Job.fetch(job_key, connection=conn)
 
     if job.is_finished:
-	result = Result.query.filter_by(id=job.result).first()
+	result = Result.select().where(Result.id == job.result).first()
 	print("result")
         results = sorted(
             result.result_no_stop_words.items(),
@@ -97,4 +116,6 @@ def get_results(job_key):
         return "Nay!", 202
 
 if __name__ == '__main__':
+    auth.User.create_table(fail_silently=True)
+    Result.create_table(fail_silently=True)
     app.run()
