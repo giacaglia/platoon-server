@@ -35,7 +35,7 @@ $ python worker.py
 ```
 
 ```sh
-$ heroku local
+$ python manage.py runserver
 ```
 
 ## Deploying to Heroku
