@@ -3,3 +3,4 @@ venv
 staticfiles
 .env
 dump.rdb
+.idea/*
