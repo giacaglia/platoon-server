@@ -4,3 +4,4 @@ staticfiles
 .env
 dump.rdb
 .idea/*
+.DS_Store
