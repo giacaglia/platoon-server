@@ -11,20 +11,15 @@ from rq import Queue
 from rq.job import Job
 from worker import conn
 # flask-peewee bindings
-from flask_peewee.db import Database, SqliteDatabase
-from flask_peewee.auth import Auth
+from flask_peewee.db import SqliteDatabase
 import json
+from model.company import Company
+from model.load import Load
+from model.user import User
 
-# configure our database
-DATABASE = {
-    'name': 'example.db',
-    'engine': 'peewee.SqliteDatabase',
-}
 app = Flask(__name__)
-# app.config.from_object(os.environ['APP_SETTINGS'])
 app.config.from_object(__name__)
-db = Database(app)
-auth = Auth(app, db)
+db = SqliteDatabase('example.db')
 
 q = Queue(connection=conn)
 
@@ -115,7 +110,7 @@ def get_results(job_key):
 if __name__ == '__main__':
     database = SqliteDatabase('example.db')
     database.connect()
-    database.create_tables([auth.User, Result])
+    database.create_tables([User, Result, Company, Load])
     # data = json.dumps(['foo', {'bar': ('baz', None, 1.0, 2)}])
     # url = "http://en.wikipedia.org/wiki/Firebase"
     # result = Result(url=url, result_all=url)
