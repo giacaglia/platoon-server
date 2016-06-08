@@ -1,9 +1,13 @@
 from hello import db
 import datetime
-from peewee import TextField
-from playhouse.postgres_ext import BinaryJSONField
+from peewee import TextField, Model, SqliteDatabase
+from playhouse.postgres_ext import JSONField
 
-class Result(db.Model):
+db = SqliteDatabase('example.db')
+class Result(Model):
     url = TextField()
-    resukt_all = BinaryJSONField(default=lambda: {})
-    resukt_no_stop_words =  BinaryJSONField(default=lambda: {})
+    result_all = TextField()
+    # result_no_stop_words =  JSONField()
+
+    class Meta:
+        database = db

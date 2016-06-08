@@ -11,9 +11,9 @@ from rq import Queue
 from rq.job import Job
 from worker import conn
 # flask-peewee bindings
-from flask_peewee.db import Database
+from flask_peewee.db import Database, SqliteDatabase
 from flask_peewee.auth import Auth
-from flask_peewee.rest import RestAPI
+import json
 
 # configure our database
 DATABASE = {
@@ -24,22 +24,13 @@ app = Flask(__name__)
 # app.config.from_object(os.environ['APP_SETTINGS'])
 app.config.from_object(__name__)
 db = Database(app)
-# create an Auth object for use with our flask app and database wrapper
 auth = Auth(app, db)
 
 q = Queue(connection=conn)
 
 from models import *
 
-# create a RestAPI container
-api = RestAPI(app)
-api.setup()
-api.register(Result)
-api.setup()
-
-
 def count_and_save_words(url):
-
     errors = []
 
     try:
@@ -51,7 +42,7 @@ def count_and_save_words(url):
         return {"error": errors}
 
     # text processing
-    raw = BeautifulSoup(r.text).get_text()
+    raw = BeautifulSoup(r.text, "html.parser").get_text()
     nltk.data.path.append('./nltk_data/')  # set the path
     tokens = nltk.word_tokenize(raw)
     text = nltk.Text(tokens)
@@ -64,23 +55,28 @@ def count_and_save_words(url):
     # stop words
     no_stop_words = [w for w in raw_words if w.lower() not in stops]
     no_stop_words_count = Counter(no_stop_words)
-
+    print("models")
     # save the results
-    try:
-	from models import Result
-        result = Result(
-            url=url,
-            result_all=raw_word_count,
-            result_no_stop_words=no_stop_words_count
-        )
-        query = Result.select().where(url=url)
-        result = query.first()
-        db.session.add(result)
-        db.session.commit()
-        return result.id
-    except:
-        errors.append("Unable to add item to database.")
-        return {"error": errors}
+    # try:
+    from models import Result
+    print("BEFORE URL")
+    print(url)
+    # raw_word_count = json.dumps(raw_word_count)
+    data = {}
+    no_stop_words_count = '{}'
+    # print(raw_word_count)
+    # print(no_stop_words_count)
+    result = Result(url=url, result_all=data)
+                # result_no_stop_words=no_stop_words_count
+            # )
+    print("created it")
+    print(result)
+    result.save()
+    return result.id
+    # except:
+    #     print("error")
+    #     errors.append("Unable to add item to database.")
+    #     return {"error": errors}
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -104,8 +100,9 @@ def get_results(job_key):
     job = Job.fetch(job_key, connection=conn)
 
     if job.is_finished:
-	result = Result.select().where(Result.id == job.result).first()
-	print("result")
+        print(job)
+        query = Result.select().where(Result.id == job.result)
+        result = query.first()
         results = sorted(
             result.result_no_stop_words.items(),
             key=operator.itemgetter(1),
@@ -116,6 +113,12 @@ def get_results(job_key):
         return "Nay!", 202
 
 if __name__ == '__main__':
-    auth.User.create_table(fail_silently=True)
-    Result.create_table(fail_silently=True)
+    database = SqliteDatabase('example.db')
+    database.connect()
+    database.create_tables([auth.User, Result])
+    # data = json.dumps(['foo', {'bar': ('baz', None, 1.0, 2)}])
+    # url = "http://en.wikipedia.org/wiki/Firebase"
+    # result = Result(url=url, result_all=url)
+    # print(result)
+    # result.save()
     app.run()
