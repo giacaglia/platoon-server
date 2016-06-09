@@ -1,4 +1,3 @@
-from hello import db
 import datetime
 from peewee import TextField, Model, SqliteDatabase
 from playhouse.postgres_ext import JSONField

@@ -3,7 +3,7 @@ import requests
 import operator
 import re
 import nltk
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, Blueprint, Response, render_template, request, jsonify
 from stop_words import stops
 from collections import Counter
 from bs4 import BeautifulSoup
@@ -12,22 +12,26 @@ from rq.job import Job
 from worker import conn
 # flask-peewee bindings
 from flask_peewee.db import SqliteDatabase
-import json
-from model.company import Company
-from model.load import Load
-from model.user import User
+from flask_peewee.rest import RestAPI
+
+from models.company import Company
+from models.load import Load
+from models.user import User
+from models.result import Result
 
 app = Flask(__name__)
 app.config.from_object(__name__)
-db = SqliteDatabase('example.db')
-
 q = Queue(connection=conn)
 
-from models import *
+api = RestAPI(app)
+api.register(Company)
+api.register(Load)
+api.register(User)
+api.register(Result)
+api.setup()
 
 def count_and_save_words(url):
     errors = []
-
     try:
         r = requests.get(url)
     except:
@@ -50,28 +54,14 @@ def count_and_save_words(url):
     # stop words
     no_stop_words = [w for w in raw_words if w.lower() not in stops]
     no_stop_words_count = Counter(no_stop_words)
-    print("models")
-    # save the results
-    # try:
-    from models import Result
-    print("BEFORE URL")
+    from models.result import Result
     print(url)
-    # raw_word_count = json.dumps(raw_word_count)
     data = {}
-    no_stop_words_count = '{}'
-    # print(raw_word_count)
-    # print(no_stop_words_count)
     result = Result(url=url, result_all=data)
-                # result_no_stop_words=no_stop_words_count
-            # )
-    print("created it")
     print(result)
     result.save()
     return result.id
-    # except:
-    #     print("error")
-    #     errors.append("Unable to add item to database.")
-    #     return {"error": errors}
+
 
 
 @app.route('/', methods=['GET', 'POST'])
@@ -107,10 +97,14 @@ def get_results(job_key):
     else:
         return "Nay!", 202
 
+def validate(phone_number):
+    print(phone_number)
+    Response(phone_number, mimetype='application/json')
+
+db = SqliteDatabase('example.db')
 if __name__ == '__main__':
-    database = SqliteDatabase('example.db')
-    database.connect()
-    database.create_tables([User, Result, Company, Load], safe=True)
+    db.connect()
+    db.create_tables([User, Company, Load], safe=True)
     # data = json.dumps(['foo', {'bar': ('baz', None, 1.0, 2)}])
     # url = "http://en.wikipedia.org/wiki/Firebase"
     # result = Result(url=url, result_all=url)
