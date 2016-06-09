@@ -110,7 +110,7 @@ def get_results(job_key):
 if __name__ == '__main__':
     database = SqliteDatabase('example.db')
     database.connect()
-    database.create_tables([User, Result, Company, Load])
+    database.create_tables([User, Result, Company, Load], safe=True)
     # data = json.dumps(['foo', {'bar': ('baz', None, 1.0, 2)}])
     # url = "http://en.wikipedia.org/wiki/Firebase"
     # result = Result(url=url, result_all=url)
