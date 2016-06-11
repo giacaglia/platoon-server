@@ -6,7 +6,7 @@ db = SqliteDatabase('example.db')
 
 class User(Model):
     firstName = TextField()
-    lastName = FloatField()
+    lastName = TextField()
     phoneNumber = TextField()
     truckType = TextField()
     plateNumber = TextField()

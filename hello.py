@@ -23,9 +23,9 @@ app.config.from_object(__name__)
 q = Queue(connection=conn)
 
 api = RestAPI(app)
+api.register(User)
 api.register(Company)
 api.register(Load)
-api.register(User)
 api.setup()
 
 # def count_and_save_words(url):
