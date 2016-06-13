@@ -10,13 +10,13 @@ from bs4 import BeautifulSoup
 from rq import Queue
 from rq.job import Job
 from worker import conn
-# flask-peewee bindings
 from flask_peewee.db import SqliteDatabase
 from flask_peewee.rest import RestAPI
 
 from models.company import Company
 from models.load import Load
 from models.user import User
+from models.location import Location
 
 app = Flask(__name__)
 app.config.from_object(__name__)
@@ -26,7 +26,34 @@ api = RestAPI(app)
 api.register(User)
 api.register(Company)
 api.register(Load)
+api.register(Location)
 api.setup()
+
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    results = {}
+    # if request.method == "POST":
+    #     # get url that the person has entered
+    #     url = request.form['url']
+    #     if 'http://' not in url[:7]:
+    #         url = 'http://' + url
+        # job = q.enqueue_call(
+        #     func="hello.count_and_save_words", args=(url,), result_ttl=5000
+        # )
+        # print(job.get_id())
+    return render_template('index.html', results=results)
+
+def validate(phone_number):
+    print(phone_number)
+    Response(phone_number, mimetype='application/json')
+
+db = SqliteDatabase('example.db')
+if __name__ == '__main__':
+    db.connect()
+    db.create_tables([User, Company, Load, Location], safe=True)
+    app.run()
+
+
 
 # def count_and_save_words(url):
 #     errors = []
@@ -60,23 +87,6 @@ api.setup()
 #     result.save()
 #     return result.id
 
-
-
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    results = {}
-    # if request.method == "POST":
-    #     # get url that the person has entered
-    #     url = request.form['url']
-    #     if 'http://' not in url[:7]:
-    #         url = 'http://' + url
-        # job = q.enqueue_call(
-        #     func="hello.count_and_save_words", args=(url,), result_ttl=5000
-        # )
-        # print(job.get_id())
-
-    return render_template('index.html', results=results)
-
 # @app.route("/results/<job_key>", methods=['GET'])
 # def get_results(job_key):
 #     from flask import jsonify
@@ -94,13 +104,3 @@ def index():
 #         return jsonify(results)
 #     else:
 #         return "Nay!", 202
-
-def validate(phone_number):
-    print(phone_number)
-    Response(phone_number, mimetype='application/json')
-
-db = SqliteDatabase('example.db')
-if __name__ == '__main__':
-    db.connect()
-    db.create_tables([User, Company, Load], safe=True)
-    app.run()

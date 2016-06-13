@@ -13,6 +13,8 @@ class Load(Model):
     numberPallets = IntegerField()
     totalPrice = IntegerField()
     pricePerLoad = FloatField()
+    weight = IntegerField()
+    referenceNumber = TextField()
 
     class Meta:
         database = db

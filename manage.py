@@ -1,15 +1,17 @@
 import os
-from flask.ext.script import Manager
-from flask.ext.migrate import Migrate, MigrateCommand
+from playhouse.migrate import *
+from flask_peewee.db import SqliteDatabase
 
-from hello import app, db
 
-app.config.from_object(os.environ['APP_SETTINGS'])
+from hello import app
 
-migrate = Migrate(app, db)
-manager = Manager(app)
+db = SqliteDatabase('example.db')
+migrator = SqliteMigrator(db)
 
-manager.add_command('db', MigrateCommand)
+weight = IntegerField(default=8000)
+referenceNumber = TextField(default="123481")
 
-if __name__ == '__main__':
-    manager.run()
+migrate(
+    migrator.add_column('load', 'weight', weight),
+    migrator.add_column('load', 'referenceNumber', referenceNumber),
+)
