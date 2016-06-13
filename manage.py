@@ -8,10 +8,12 @@ from hello import app
 db = SqliteDatabase('example.db')
 migrator = SqliteMigrator(db)
 
-weight = IntegerField(default=8000)
-referenceNumber = TextField(default="123481")
+pallet_length = IntegerField(default=40)
+pallet_width = IntegerField(default=48)
+pallet_height = IntegerField(default=48)
 
 migrate(
-    migrator.add_column('load', 'weight', weight),
-    migrator.add_column('load', 'referenceNumber', referenceNumber),
+    migrator.add_column('load', 'pallet_length', pallet_length),
+    migrator.add_column('load', 'pallet_width', pallet_width),
+    migrator.add_column('load', 'pallet_height', pallet_height),
 )

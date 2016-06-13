@@ -16,5 +16,9 @@ class Load(Model):
     weight = IntegerField()
     referenceNumber = TextField()
 
+    pallet_length = IntegerField()
+    pallet_width = IntegerField()
+    pallet_height = IntegerField()
+
     class Meta:
         database = db
